@@ -6,6 +6,7 @@ from ..task import Task, TaskStatus
 from ..memory import TaskRepository
 from ..tools.registry import ToolRegistry
 from ..model_router import ModelRouter
+from ..skills.registry import SkillRegistry
 
 
 class SupervisorAgent(BaseAgent):
@@ -16,17 +17,19 @@ class SupervisorAgent(BaseAgent):
                 tool_registry: ToolRegistry,
                 model_router: ModelRouter,
                 task_repo: TaskRepository,
+                skill_registry: Optional[SkillRegistry] = None,
                 max_workers: int = 1
     ):
         super().__init__(tool_registry)
         self.model_router = model_router
         self.task_repo = task_repo
+        self.skill_registry = skill_registry
         self.max_workers = max_workers
         self._workers: List[WorkerAgent] = []
 
         # Initialize workers
         for i in range(max_workers):
-                worker = WorkerAgent(tool_registry, model_router)
+                worker = WorkerAgent(tool_registry, model_router, skill_registry)
                 self._workers.append(worker)
 
         self._task_queue: List[Task] = []

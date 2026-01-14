@@ -4,14 +4,16 @@ import re
 from .base import BaseAgent
 from ..task import Task, TaskStatus
 from ..model_router import ModelRouter
+from ..skills.registry import SkillRegistry
 
 
 class WorkerAgent(BaseAgent):
-    """Worker agent that executes tasks with tool calling."""
+    """Worker agent that executes tasks with tool calling and skills."""
 
-    def __init__(self, tool_registry, model_router: ModelRouter):
+    def __init__(self, tool_registry, model_router: ModelRouter, skill_registry: Optional[SkillRegistry] = None):
         super().__init__(tool_registry)
         self.model_router = model_router
+        self.skill_registry = skill_registry or SkillRegistry()
         self.max_tools_per_step = 3
         self._status = "idle"
 
@@ -36,10 +38,48 @@ class WorkerAgent(BaseAgent):
                 }
 
     def _run_task_loop(self, task: Task, max_steps: int = 10) -> Dict[str, Any]:
-        """Run task through decision-action loop."""
+        """Run task through decision-action loop with skill checking."""
         steps_completed = 0
         tool_calls_count = 0
 
+        # Check for applicable skills first
+        available_tools = set(tool.name for tool in self.tool_registry.list_tools())
+        matching_skills = self.skill_registry.find_matching_skills(task.goal, available_tools)
+
+        if matching_skills:
+                # Use the first matching skill
+                skill = matching_skills[0]
+                print(f"[WORKER] Using skill: {skill.name}")
+
+                # Set up skill dependencies
+                skill.tool_registry = self.tool_registry
+                skill.model_router = self.model_router
+
+                try:
+                        skill_result = skill.execute(task)
+                        task.add_step("skill_execution", result=f"Used skill: {skill.name}")
+
+                        if skill_result.get("success", False):
+                                return {
+                                        "success": True,
+                                        "steps_completed": 1,
+                                        "error": None,
+                                        "skill_used": skill.name
+                                }
+                        else:
+                                return {
+                                        "success": False,
+                                        "steps_completed": 1,
+                                        "error": skill_result.get("error", "Skill execution failed")
+                                }
+                except Exception as e:
+                        return {
+                                "success": False,
+                                "steps_completed": 1,
+                                "error": f"Skill execution error: {str(e)}"
+                        }
+
+        # Fall back to regular tool-based execution
         while steps_completed < max_steps:
                 steps_completed += 1
                 tool_calls_count = 0

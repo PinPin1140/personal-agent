@@ -5,6 +5,7 @@ from .memory import TaskRepository
 from .model_router import ModelRouter
 from .agents.supervisor import SupervisorAgent
 from .tools.registry import ToolRegistry, ShellTool, FileReadTool, FileWriteTool, ListDirTool
+from .skills.registry import SkillRegistry
 
 
 class AgentEngine:
@@ -24,11 +25,15 @@ class AgentEngine:
         self.tool_registry = ToolRegistry()
         self._register_default_tools()
 
+        # Initialize skill registry
+        self.skill_registry = SkillRegistry()
+
         # Initialize supervisor with workers
         self.supervisor = SupervisorAgent(
                 tool_registry=self.tool_registry,
                 model_router=model_router,
                 task_repo=task_repo,
+                skill_registry=self.skill_registry,
                 max_workers=max_workers
         )
 
