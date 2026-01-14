@@ -51,6 +51,16 @@ def main():
     auth_logout_parser = auth_subparsers.add_parser("logout", help="Logout from provider")
     auth_logout_parser.add_argument("provider", help="Provider name")
 
+    auth_add_account_parser = auth_subparsers.add_parser("add-account", help="Add account for provider")
+    auth_add_account_parser.add_argument("provider", help="Provider name")
+    auth_add_account_parser.add_argument("account-id", help="Account identifier")
+    auth_add_account_parser.add_argument("--priority", type=int, default=1, help="Account priority (higher first)")
+
+    auth_list_parser = auth_subparsers.add_parser("list", help="List all accounts")
+
+    auth_rotate_parser = auth_subparsers.add_parser("rotate", help="Rotate to next available account")
+    auth_rotate_parser.add_argument("provider", help="Provider name")
+
     # Workers command
     workers_parser = subparsers.add_parser("workers", help="Show worker status")
 
@@ -87,7 +97,61 @@ def main():
         elif args.auth_command == "logout":
                 print(f"Logout from provider: {args.provider}")
                 print("Session clearing not implemented yet")
-        return 0
+                return 0
+
+        elif args.auth_command == "add-account":
+                from agent.auth.accounts import AccountManager
+                account_mgr = AccountManager()
+                success = account_mgr.add_account(
+                        args.provider,
+                        getattr(args, 'account-id'),
+                        {
+                                "type": "oauth_token",
+                                "token": "stub_token"
+                        },
+                        getattr(args, 'priority', 1)
+                )
+                if success:
+                        print(f"Account {getattr(args, 'account-id')} added to {args.provider}")
+                else:
+                        print("Failed to add account")
+                return 0
+
+        elif args.auth_command == "list":
+                from agent.auth.accounts import AccountManager
+                account_mgr = AccountManager()
+                provider_name = getattr(args, 'provider', None)
+                accounts = account_mgr.list_accounts(provider_name)
+
+                if not accounts:
+                        print(f"No accounts found for provider: {provider_name or 'all'}")
+                        return 0
+
+                print(f"Accounts ({len(accounts)}):")
+                for account in accounts:
+                        cooldown_status = "in cooldown" if account.get("cooldown_until", 0) > time.time() else "available"
+                        print(f"  {account['account_id']}: priority={account['priority']}, last_used={account.get('last_used', 'never')}, {cooldown_status}")
+                return 0
+
+        elif args.auth_command == "rotate":
+                from agent.auth.accounts import AccountManager
+                from agent.auth.rotation import AccountRotator
+                account_mgr = AccountManager()
+                rotator = AccountRotator(account_mgr)
+
+                provider_name = getattr(args, 'provider', None)
+                if not provider_name:
+                        print("Provider name required for rotate")
+                        return 0
+
+                account_id = rotator.select_account(provider_name)
+
+                if not account_id:
+                        print("No available accounts for rotation")
+                        return 0
+
+                print(f"Rotated to account: {account_id}")
+                return 0
 
     if args.command == "workers":
         workers = engine.get_worker_status()
