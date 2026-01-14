@@ -146,7 +146,34 @@ Execution log:
 
 [Step 3] 2026-01-15T03:20:27
   Action: decision
-  Result: done
+   Result: done
+```
+
+## How Provider Registration Works
+
+The agent supports multiple model providers through a pluggable router system.
+
+### Built-in Providers
+
+- **dummy**: For testing without API keys
+- **openai**: Uses OpenAI API (requires `OPENAI_API_KEY` environment variable)
+
+### Automatic Provider Selection
+
+The router automatically selects the default provider:
+- OpenAI if `OPENAI_API_KEY` is set
+- Dummy provider otherwise
+
+### Extending with New Providers
+
+Create a new provider class implementing `ModelProvider` and register it:
+
+```python
+from agent.model_router import ModelRouter
+
+router = ModelRouter()
+router.register("my_provider", MyProvider())
+response = router.generate("prompt", provider_name="my_provider")
 ```
 
 ## How Task Persistence Works

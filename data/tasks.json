@@ -149,7 +149,157 @@
         }
       ],
       "memory": {}
+    },
+    "2": {
+      "id": 2,
+      "goal": "Test provider integration",
+      "status": "done",
+      "created_at": "2026-01-14T20:42:46.957567",
+      "updated_at": "2026-01-14T20:42:47.381519",
+      "steps": [
+        {
+          "step_id": 1,
+          "timestamp": "2026-01-14T20:42:47.271335",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Test provider integration\nCurrent step:...",
+          "error": null
+        },
+        {
+          "step_id": 2,
+          "timestamp": "2026-01-14T20:42:47.277209",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 3,
+          "timestamp": "2026-01-14T20:42:47.281481",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Test provider integration\nCurrent step:...",
+          "error": null
+        },
+        {
+          "step_id": 4,
+          "timestamp": "2026-01-14T20:42:47.285017",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 5,
+          "timestamp": "2026-01-14T20:42:47.288700",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Test provider integration\nCurrent step:...",
+          "error": null
+        },
+        {
+          "step_id": 6,
+          "timestamp": "2026-01-14T20:42:47.294759",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 7,
+          "timestamp": "2026-01-14T20:42:47.300648",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Test provider integration\nCurrent step:...",
+          "error": null
+        },
+        {
+          "step_id": 8,
+          "timestamp": "2026-01-14T20:42:47.304422",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 9,
+          "timestamp": "2026-01-14T20:42:47.308594",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Test provider integration\nCurrent step:...",
+          "error": null
+        },
+        {
+          "step_id": 10,
+          "timestamp": "2026-01-14T20:42:47.312485",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 11,
+          "timestamp": "2026-01-14T20:42:47.318690",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Test provider integration\nCurrent step:...",
+          "error": null
+        },
+        {
+          "step_id": 12,
+          "timestamp": "2026-01-14T20:42:47.323762",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 13,
+          "timestamp": "2026-01-14T20:42:47.329399",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Test provider integration\nCurrent step:...",
+          "error": null
+        },
+        {
+          "step_id": 14,
+          "timestamp": "2026-01-14T20:42:47.337219",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 15,
+          "timestamp": "2026-01-14T20:42:47.342363",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Test provider integration\nCurrent step:...",
+          "error": null
+        },
+        {
+          "step_id": 16,
+          "timestamp": "2026-01-14T20:42:47.346667",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 17,
+          "timestamp": "2026-01-14T20:42:47.351281",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Test provider integration\nCurrent step:...",
+          "error": null
+        },
+        {
+          "step_id": 18,
+          "timestamp": "2026-01-14T20:42:47.355759",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 19,
+          "timestamp": "2026-01-14T20:42:47.366332",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Test provider integration\nCurrent step:...",
+          "error": null
+        },
+        {
+          "step_id": 20,
+          "timestamp": "2026-01-14T20:42:47.374160",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        }
+      ],
+      "memory": {}
     }
   },
-  "next_id": 2
+  "next_id": 3
 }

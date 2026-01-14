@@ -4,7 +4,7 @@ import time
 
 from .task import Task, TaskStatus
 from .memory import TaskRepository
-from .models import ModelProvider, ProviderRegistry
+from .model_router import ModelRouter
 from .executor import ToolExecutor
 
 
@@ -14,11 +14,11 @@ class AgentEngine:
     def __init__(
         self,
         task_repo: TaskRepository,
-        model_provider: ModelProvider,
+        model_router: ModelRouter,
         working_dir: Optional[str] = None
     ):
         self.task_repo = task_repo
-        self.model_provider = model_provider
+        self.model_router = model_router
         self.executor = ToolExecutor(working_dir=working_dir)
         self._running = False
 
@@ -72,7 +72,7 @@ class AgentEngine:
             step_count += 1
 
             context = self._build_context(task)
-            decision = self.model_provider.generate(
+            decision = self.model_router.generate(
                 prompt=f"Task goal: {task.goal}\nCurrent step: {step_count}",
                 context=context
             )

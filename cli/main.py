@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from agent.memory import TaskRepository
 from agent.engine import AgentEngine
-from agent.models import DummyProvider
+from agent.model_router import ModelRouter
 from agent.task import TaskStatus
 
 
@@ -46,8 +46,8 @@ def main():
         return 0
 
     repo = TaskRepository()
-    provider = DummyProvider()
-    engine = AgentEngine(repo, provider)
+    router = ModelRouter()
+    engine = AgentEngine(repo, router)
 
     if args.command == "add":
         task = repo.create(args.goal)

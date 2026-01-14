@@ -3,7 +3,8 @@ from .task import Task, TaskStatus
 from .memory import TaskRepository, MemoryStore
 from .engine import AgentEngine
 from .executor import ToolExecutor
-from .models import ModelProvider, DummyProvider, ProviderRegistry
+from .models import ModelProvider
+from .model_router import ModelRouter
 
 __all__ = [
     "Task",
@@ -13,6 +14,5 @@ __all__ = [
     "AgentEngine",
     "ToolExecutor",
     "ModelProvider",
-    "DummyProvider",
-    "ProviderRegistry"
+    "ModelRouter"
 ]
