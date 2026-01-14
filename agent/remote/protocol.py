@@ -21,7 +21,7 @@ class Message:
                 self,
                 msg_type: str,
                 payload: Optional[Dict[str, Any]] = None,
-                node_id: Optional[str] = None
+                node_id: Optional[str] = None,
                 task_id: Optional[int] = None,
                 error: Optional[str] = None
     ):

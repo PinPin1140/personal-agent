@@ -9,9 +9,19 @@ from .providers.openai_provider import OpenAIProvider
 class ModelRouter:
     """Router for model provider selection and delegation."""
 
-    def __init__(self):
+    def __init__(
+        self,
+        model_metrics=None,
+        router_policy=None,
+        account_rotator=None
+    ):
         self._providers: Dict[str, ModelProvider] = {}
         self._default_provider: Optional[str] = None
+
+        # Integrated systems
+        self.model_metrics = model_metrics
+        self.router_policy = router_policy
+        self.account_rotator = account_rotator
 
         # Auto-register built-in providers
         self.register("dummy", DummyProvider())
@@ -40,9 +50,62 @@ class ModelRouter:
         context: Dict[str, Any] = {},
         provider_name: Optional[str] = None
     ) -> str:
-        """Generate response using selected provider."""
+        """Generate response using selected provider with intelligent routing."""
+        import time
+
+        # Use intelligent routing if available
+        if self.router_policy and not provider_name:
+            # Get available providers
+            available = self.list_providers()
+            # Select best provider based on task goal
+            task_goal = context.get("task_goal", prompt[:100])
+            provider_name = self.router_policy.select_provider(
+                task_goal=task_goal,
+                preferred_providers=available
+            )
+            if not provider_name:
+                provider_name = self._default_provider
+
         provider = self.get_provider(provider_name)
-        return provider.generate(prompt, context)
+
+        # Track account selection if rotator available
+        account_id = None
+        if self.account_rotator and hasattr(provider, 'requires_auth') and provider.requires_auth:
+            account_id = self.account_rotator.select_account(provider_name)
+
+        # Track metrics
+        start_time = time.time()
+        try:
+            response = provider.generate(prompt, context)
+            latency = int((time.time() - start_time) * 1000)
+
+            # Record success metrics
+            if self.model_metrics:
+                self.model_metrics.record_request(
+                    provider_name=provider_name,
+                    account_id=account_id,
+                    success=True,
+                    latency_ms=latency,
+                    tokens_in=len(prompt.split()),
+                    tokens_out=len(response.split())
+                )
+
+            return response
+
+        except Exception as e:
+            latency = int((time.time() - start_time) * 1000)
+
+            # Record failure metrics
+            if self.model_metrics:
+                self.model_metrics.record_request(
+                    provider_name=provider_name,
+                    account_id=account_id,
+                    success=False,
+                    latency_ms=latency,
+                    error=str(e)
+                )
+
+            raise
 
     def generate_stream(
         self,

@@ -111,6 +111,21 @@ def main():
     stream_parser = subparsers.add_parser("stream", help="Stream task execution")
     stream_parser.add_argument("task_id", type=int, help="Task ID to stream")
 
+    # IRIS commands
+    iris_parser = subparsers.add_parser("iris-new", help="Create new IRIS task with .context")
+    iris_parser.add_argument("goal", help="Task goal (use quotes)")
+
+    iris_list_parser = subparsers.add_parser("iris-list", help="List current IRIS task")
+
+    iris_run_parser = subparsers.add_parser("iris-run", help="Run IRIS task with enforcement")
+    iris_run_parser.add_argument("task_id", help="IRIS task ID to run")
+
+    iris_attach_parser = subparsers.add_parser("iris-attach", help="Attach to running IRIS task")
+    iris_attach_parser.add_argument("task_id", help="IRIS task ID to attach to")
+
+    iris_logs_parser = subparsers.add_parser("iris-logs", help="View IRIS task execution logs")
+    iris_logs_parser.add_argument("task_id", help="IRIS task ID to view logs for")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -292,7 +307,33 @@ def main():
             if step.get('result'):
                 print(f"  Result: {step['result']}")
             if step.get('error'):
-                print(f"  Error: {step['error']}")
+                 print(f"  Error: {step['error']}")
+
+    # IRIS commands
+    elif args.command == "iris-new":
+        from agent.iris_cli import IRISNewCommand
+        cmd = IRISNewCommand()
+        cmd.execute(args.goal)
+
+    elif args.command == "iris-list":
+        from agent.iris_cli import IRISListCommand
+        cmd = IRISListCommand()
+        cmd.execute()
+
+    elif args.command == "iris-run":
+        from agent.iris_cli import IRISRunCommand
+        cmd = IRISRunCommand()
+        cmd.execute(args.task_id)
+
+    elif args.command == "iris-attach":
+        from agent.iris_cli import IRISAttachCommand
+        cmd = IRISAttachCommand()
+        cmd.execute(args.task_id)
+
+    elif args.command == "iris-logs":
+        from agent.iris_cli import IRISLogsCommand
+        cmd = IRISLogsCommand()
+        cmd.execute(args.task_id)
 
     return 0
 

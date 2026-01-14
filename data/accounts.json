@@ -1,0 +1,16 @@
+{
+  "openai": [
+    {
+      "account_id": "test-account",
+      "credentials": {
+        "type": "oauth_token",
+        "token": "stub_token"
+      },
+      "priority": 1,
+      "cooldown_until": null,
+      "created_at": 1768425978.0881052,
+      "last_used": null,
+      "use_count": 0
+    }
+  ]
+}
