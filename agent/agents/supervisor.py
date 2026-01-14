@@ -1,5 +1,8 @@
-"""Supervisor agent for managing worker agents."""
-from typing import Dict, Any, Optional, List
+"""Supervisor agent for managing worker agents with concurrent execution."""
+import threading
+import time
+from typing import Dict, Any, Optional, List, Set
+from queue import Queue, PriorityQueue
 from .base import BaseAgent
 from .executor import WorkerAgent
 from ..task import Task, TaskStatus
@@ -7,10 +10,12 @@ from ..memory import TaskRepository
 from ..tools.registry import ToolRegistry
 from ..model_router import ModelRouter
 from ..skills.registry import SkillRegistry
+from ..commands.registry import CommandRegistry
+from ..profiles.base import AgentProfile
 
 
 class SupervisorAgent(BaseAgent):
-    """Supervisor that assigns tasks to workers and monitors progress."""
+    """Supervisor that manages concurrent workers with task decomposition and collaboration."""
 
     def __init__(
                 self,
@@ -18,66 +23,46 @@ class SupervisorAgent(BaseAgent):
                 model_router: ModelRouter,
                 task_repo: TaskRepository,
                 skill_registry: Optional[SkillRegistry] = None,
-                max_workers: int = 1
+                command_registry: Optional[CommandRegistry] = None,
+                profile: Optional[AgentProfile] = None,
+                max_workers: int = 3
     ):
         super().__init__(tool_registry)
         self.model_router = model_router
         self.task_repo = task_repo
         self.skill_registry = skill_registry
+        self.command_registry = command_registry
+        self.profile = profile
         self.max_workers = max_workers
         self._workers: List[WorkerAgent] = []
+        self._worker_threads: List[threading.Thread] = []
 
-        # Initialize workers
-        for i in range(max_workers):
-                worker = WorkerAgent(tool_registry, model_router, skill_registry)
-                self._workers.append(worker)
+        # Concurrent execution components
+        self._task_queue: PriorityQueue = PriorityQueue()  # (priority, task_id, task)
+        self._active_tasks: Dict[int, Task] = {}  # task_id -> task
+        self._worker_assignments: Dict[int, int] = {}  # task_id -> worker_id
+        self._subtask_relationships: Dict[int, Set[int]] = {}  # parent_task_id -> set of subtask_ids
 
-        self._task_queue: List[Task] = []
+        # Communication and coordination
+        self._message_queue: Queue = Queue()
+        self._shared_memory: Dict[str, Any] = {}
+        self._locks: Dict[str, threading.Lock] = {}
+
+        # Initialize workers and threads
+        self._initialize_workers()
+        self._start_worker_threads()
+
         self._status = "idle"
+        return results
 
-    def execute(self, task: Task) -> Dict[str, Any]:
-        """Assign task to next available worker."""
-        # Find available worker
-        for worker in self._workers:
-                if worker.get_status() == "idle":
-                        self._status = "dispatching"
-                        result = worker.execute(task)
-                        self._status = "idle"
-                        return result
+    def shutdown(self):
+        """Shutdown all worker threads."""
+        self._shutdown_event.set()
+        self._status = "shutdown"
 
-        # No workers available
-        self._task_queue.append(task)
-        self._status = "queued"
-        return {
-                "success": False,
-                "steps_completed": 0,
-                "error": "No workers available, task queued"
-        }
-
-    def process_queue(self) -> int:
-        """Process pending tasks in queue."""
-        processed = 0
-
-        while self._task_queue:
-                for worker in self._workers:
-                        if worker.get_status() == "idle":
-                                task = self._task_queue.pop(0)
-                                result = worker.execute(task)
-                                processed += 1
-
-                                if not result.get("success", False):
-                                        print(f"[SUPERVISOR] Task {task.id} failed: {result.get('error')}")
-
-                                break
-
-                if not self._task_queue:
-                        break
-
-        return processed
-
-    def get_status(self) -> str:
-        """Get supervisor status."""
-        return self._status
+        # Wait for threads to finish
+        for thread in self._worker_threads:
+                thread.join(timeout=5.0)
 
     def get_worker_status(self) -> list[Dict[str, Any]]:
         """Get status of all workers."""
@@ -90,38 +75,38 @@ class SupervisorAgent(BaseAgent):
         ]
 
     def run_all_pending(self, max_steps: int = 10) -> Dict[str, Any]:
-        """Run all pending tasks through workers."""
-        tasks = self.task_repo.list_all()
-        pending = [t for t in tasks if t.status == TaskStatus.PENDING]
+        """Load all pending tasks into concurrent execution and wait for completion."""
+        # Load pending tasks into queue
+        queued = self.process_pending_tasks()
 
         results = {
-                "total": len(pending),
+                "total": queued,
                 "completed": 0,
                 "failed": 0,
-                "queued": 0
+                "queued": queued,
+                "active_workers": len(self._workers)
         }
 
         self._status = "processing"
 
-        for task in pending:
-                task.update_status(TaskStatus.RUNNING)
-                self.task_repo.update(task)
+        # Wait for all tasks to complete
+        start_time = time.time()
+        timeout = 300  # 5 minutes timeout
 
-                result = self.execute(task)
+        while not self._task_queue.empty() and (time.time() - start_time) < timeout:
+                # Check active tasks periodically
+                with self._get_lock("active_tasks"):
+                        active_count = len(self._active_tasks)
 
-                if result.get("success", False):
-                        results["completed"] += 1
-                        print(f"[SUPERVISOR] Task {task.id} completed")
-                else:
-                        results["failed"] += 1
-                        task.update_status(TaskStatus.ERROR)
-                        print(f"[SUPERVISOR] Task {task.id} failed: {result.get('error')}")
+                if active_count == 0 and self._task_queue.empty():
+                        break
 
-                self.task_repo.update(task)
+                time.sleep(1)  # Brief pause
 
-        # Process any remaining queue
-        queued = self.process_queue()
-        results["queued"] = queued
+        # Final status
+        tasks = self.task_repo.list_all()
+        results["completed"] = len([t for t in tasks if t.status == TaskStatus.DONE])
+        results["failed"] = len([t for t in tasks if t.status == TaskStatus.ERROR])
 
         self._status = "idle"
         return results
