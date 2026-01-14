@@ -1,0 +1,155 @@
+{
+  "tasks": {
+    "1": {
+      "id": 1,
+      "goal": "Final test task",
+      "status": "done",
+      "created_at": "2026-01-14T20:35:08.485994",
+      "updated_at": "2026-01-14T20:35:09.275744",
+      "steps": [
+        {
+          "step_id": 1,
+          "timestamp": "2026-01-14T20:35:09.102018",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Final test task\nCurrent step: 1",
+          "error": null
+        },
+        {
+          "step_id": 2,
+          "timestamp": "2026-01-14T20:35:09.107237",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 3,
+          "timestamp": "2026-01-14T20:35:09.111425",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Final test task\nCurrent step: 2",
+          "error": null
+        },
+        {
+          "step_id": 4,
+          "timestamp": "2026-01-14T20:35:09.119243",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 5,
+          "timestamp": "2026-01-14T20:35:09.121336",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Final test task\nCurrent step: 3",
+          "error": null
+        },
+        {
+          "step_id": 6,
+          "timestamp": "2026-01-14T20:35:09.123468",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 7,
+          "timestamp": "2026-01-14T20:35:09.127156",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Final test task\nCurrent step: 4",
+          "error": null
+        },
+        {
+          "step_id": 8,
+          "timestamp": "2026-01-14T20:35:09.129479",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 9,
+          "timestamp": "2026-01-14T20:35:09.134660",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Final test task\nCurrent step: 5",
+          "error": null
+        },
+        {
+          "step_id": 10,
+          "timestamp": "2026-01-14T20:35:09.144578",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 11,
+          "timestamp": "2026-01-14T20:35:09.153448",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Final test task\nCurrent step: 6",
+          "error": null
+        },
+        {
+          "step_id": 12,
+          "timestamp": "2026-01-14T20:35:09.169579",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 13,
+          "timestamp": "2026-01-14T20:35:09.183430",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Final test task\nCurrent step: 7",
+          "error": null
+        },
+        {
+          "step_id": 14,
+          "timestamp": "2026-01-14T20:35:09.189531",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 15,
+          "timestamp": "2026-01-14T20:35:09.192506",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Final test task\nCurrent step: 8",
+          "error": null
+        },
+        {
+          "step_id": 16,
+          "timestamp": "2026-01-14T20:35:09.197555",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 17,
+          "timestamp": "2026-01-14T20:35:09.208658",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Final test task\nCurrent step: 9",
+          "error": null
+        },
+        {
+          "step_id": 18,
+          "timestamp": "2026-01-14T20:35:09.224137",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        },
+        {
+          "step_id": 19,
+          "timestamp": "2026-01-14T20:35:09.261398",
+          "action": "decision",
+          "result": "[DUMMY] Processed: Task goal: Final test task\nCurrent step: 10",
+          "error": null
+        },
+        {
+          "step_id": 20,
+          "timestamp": "2026-01-14T20:35:09.271732",
+          "action": "action",
+          "result": "No action executed",
+          "error": null
+        }
+      ],
+      "memory": {}
+    }
+  },
+  "next_id": 2
+}

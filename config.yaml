@@ -1,0 +1,18 @@
+# Personal Agent Configuration
+
+# Default model provider (dummy for development)
+default_provider: dummy
+
+# Working directory for shell execution
+working_dir: .
+
+# Shell command timeout in seconds
+shell_timeout: 30
+
+# Maximum steps per task execution
+max_steps: 10
+
+# Storage paths
+data_dir: data
+tasks_file: data/tasks.json
+memory_file: data/memory.json
