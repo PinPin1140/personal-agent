@@ -299,7 +299,16 @@
         }
       ],
       "memory": {}
+    },
+    "3": {
+      "id": 3,
+      "goal": "Test task",
+      "status": "pending",
+      "created_at": "2026-01-14T21:01:02.919839",
+      "updated_at": "2026-01-14T21:01:02.919874",
+      "steps": [],
+      "memory": {}
     }
   },
-  "next_id": 3
+  "next_id": 4
 }

@@ -128,6 +128,44 @@ Agent Status:
 agent logs 1
 ```
 
+### Worker Status
+
+```bash
+agent workers
+```
+
+Output:
+```
+Workers (1):
+  Worker 0: idle
+```
+
+### Authentication Management
+
+```bash
+agent auth status          # Check current provider and auth status
+agent auth login <name>    # Login to provider (stubbed)
+agent auth logout <name>   # Logout from provider
+```
+
+### Stream Task Execution
+
+```bash
+agent stream <task_id>
+```
+
+Output:
+```
+Task 1: Example task
+Status: done
+Steps: 3
+
+Execution log:
+
+[DECISION] 2026-01-15T03:20:25
+  Result: Need to read file...
+```
+
 Output:
 ```
 Task 1: Create a backup script
@@ -158,6 +196,12 @@ The agent supports multiple model providers through a pluggable router system.
 - **dummy**: For testing without API keys
 - **openai**: Uses OpenAI API (requires `OPENAI_API_KEY` environment variable)
 
+### Provider Authentication Types
+
+- **APIKEY**: Direct API key authentication (e.g., OpenAI)
+- **LOGIN**: Browser-based login flow (future)
+- **HYBRID**: Combination of both (future)
+
 ### Automatic Provider Selection
 
 The router automatically selects the default provider:
@@ -175,6 +219,91 @@ router = ModelRouter()
 router.register("my_provider", MyProvider())
 response = router.generate("prompt", provider_name="my_provider")
 ```
+
+## How Authentication Works
+
+The agent supports login-based authentication for providers that require OAuth flows.
+
+### Auth Session Storage
+
+- Persistent sessions stored in `data/auth_sessions.json`
+- Sessions survive restarts
+- Provider-specific storage
+- No sensitive data printed to stdout
+
+### Auth Commands
+
+```bash
+agent auth login <provider>    # Start login flow
+agent auth status           # Check authentication status
+agent auth logout <provider>  # Clear session
+```
+
+### Login Providers
+
+Real login providers (OAuth) can be implemented later by extending `AuthProvider` interface in `agent/auth/`.
+
+## How Tool Calling Works
+
+The agent supports autonomous tool execution similar to Agent Zero.
+
+### Built-in Tools
+
+- **shell**: Execute shell commands safely (no sudo by default)
+- **file_read**: Read file contents
+- **file_write**: Write content to files
+- **list_dir**: List directory contents
+
+### Tool Call Detection
+
+Models can invoke tools using syntax: `tool_name(arg1=value1, arg2=value2)`
+
+Example model output:
+```
+I need to check the file.
+shell(filepath="test.py")
+```
+
+### Safety Constraints
+
+- Maximum 3 tools per step (prevents infinite loops)
+- No sudo execution by default
+- Graceful failure on errors
+- All tool calls logged in task steps
+
+## Multi-Agent Architecture
+
+The agent uses a supervisor-worker pattern for autonomous task execution.
+
+### Components
+
+- **SupervisorAgent**: Manages task queue and worker assignment
+- **WorkerAgent**: Executes tasks with tool calling and model interaction
+- **Task Queue**: FIFO-based task scheduling
+
+### Autonomous Execution
+
+- No planning phase
+- No step confirmation
+- Fully autonomous decision-making
+- Tool calls detected and executed automatically
+
+### Worker Status
+
+```bash
+agent workers    # Show all worker statuses
+```
+
+### Why No Plan Mode?
+
+Unlike Agent Zero, this system does not include a planning phase because:
+
+1. **Autonomy over control**: The goal is fully autonomous execution without user intervention
+2. **Simpler UX**: Immediate action without approval feels faster and more responsive
+3. **Resource efficiency**: No extra LLM calls for plan generation
+4. **Real-time adaptation**: Tasks can adapt instantly as they execute
+
+If you need task planning, add it as a pre-processing step in your workflow instead.
 
 ## How Task Persistence Works
 

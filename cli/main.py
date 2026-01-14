@@ -39,6 +39,25 @@ def main():
     logs_parser = subparsers.add_parser("logs", help="Show task logs")
     logs_parser.add_argument("task_id", type=int, help="Task ID to show logs for")
 
+    # Auth commands
+    auth_parser = subparsers.add_parser("auth", help="Authentication management")
+    auth_subparsers = auth_parser.add_subparsers(dest="auth_command")
+
+    auth_login_parser = auth_subparsers.add_parser("login", help="Login to provider")
+    auth_login_parser.add_argument("provider", help="Provider name (e.g., openai)")
+
+    auth_status_parser = auth_subparsers.add_parser("status", help="Check auth status")
+
+    auth_logout_parser = auth_subparsers.add_parser("logout", help="Logout from provider")
+    auth_logout_parser.add_argument("provider", help="Provider name")
+
+    # Workers command
+    workers_parser = subparsers.add_parser("workers", help="Show worker status")
+
+    # Stream command
+    stream_parser = subparsers.add_parser("stream", help="Stream task execution")
+    stream_parser.add_argument("task_id", type=int, help="Task ID to stream")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -48,6 +67,53 @@ def main():
     repo = TaskRepository()
     router = ModelRouter()
     engine = AgentEngine(repo, router)
+
+    if args.command == "auth":
+        if args.auth_command == "login":
+                print(f"Login to provider: {args.provider}")
+                print("OAuth flow not implemented yet. Stub:")
+                print("  1. Would show auth URL")
+                print("  2. Wait for callback")
+                print("  3. Store tokens securely")
+        elif args.auth_command == "status":
+                provider_name = getattr(args, 'provider', None)
+                if provider_name:
+                        print(f"Auth status for {provider_name}")
+                else:
+                        provider = router.get_provider()
+                        print(f"Default provider: {router.get_default_provider()}")
+                        print(f"Auth type: {provider.auth_type}")
+                        print(f"Streaming: {provider.supports_streaming}")
+        elif args.auth_command == "logout":
+                print(f"Logout from provider: {args.provider}")
+                print("Session clearing not implemented yet")
+        return 0
+
+    if args.command == "workers":
+        workers = engine.get_worker_status()
+        print(f"Workers ({len(workers)}):")
+        for worker in workers:
+                print(f"  Worker {worker['worker_id']}: {worker['status']}")
+        return 0
+
+    if args.command == "stream":
+        task = repo.get(args.task_id)
+        if not task:
+                print(f"Task {args.task_id} not found")
+                return 1
+
+        print(f"Streaming task {task.id}: {task.goal}")
+        print(f"Status: {task.status.value}")
+        print(f"\nSteps: {len(task.steps)}")
+        print("Execution log:\n")
+
+        for step in task.steps:
+                print(f"[{step['action'].upper()}] {step['timestamp']}")
+                if step.get('result'):
+                        print(f"  Result: {step['result'][:200]}{'...' if len(step.get('result', '')) > 200 else ''}")
+                if step.get('error'):
+                        print(f"  Error: {step['error']}")
+        return 0
 
     if args.command == "add":
         task = repo.create(args.goal)

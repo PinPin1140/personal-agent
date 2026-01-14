@@ -1,6 +1,6 @@
 """Model provider abstraction for pluggable LLM backends."""
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Dict, Any, Iterator
 
 
 class ModelProvider(ABC):
@@ -14,6 +14,14 @@ class ModelProvider(ABC):
     ) -> str:
         """Generate response from prompt."""
         pass
+
+    def generate_stream(
+        self,
+        prompt: str,
+        context: Dict[str, Any] = {}
+    ) -> Iterator[str]:
+        """Generate streaming response. Default: yield full response."""
+        yield self.generate(prompt, context)
 
     @property
     @abstractmethod

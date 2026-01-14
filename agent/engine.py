@@ -1,153 +1,105 @@
 """Main agent engine loop for task execution."""
-from typing import Optional, Dict, Any
-import time
-
+from typing import Optional
 from .task import Task, TaskStatus
 from .memory import TaskRepository
 from .model_router import ModelRouter
-from .executor import ToolExecutor
+from .agents.supervisor import SupervisorAgent
+from .tools.registry import ToolRegistry, ShellTool, FileReadTool, FileWriteTool, ListDirTool
 
 
 class AgentEngine:
-    """Deterministic main loop for task execution."""
+    """Deterministic main loop for task execution with multi-agent support."""
 
     def __init__(
         self,
         task_repo: TaskRepository,
         model_router: ModelRouter,
-        working_dir: Optional[str] = None
+        working_dir: Optional[str] = None,
+        max_workers: int = 1
     ):
         self.task_repo = task_repo
         self.model_router = model_router
-        self.executor = ToolExecutor(working_dir=working_dir)
-        self._running = False
 
-    def run_single_task(self, task_id: Optional[int] = None) -> Optional[Task]:
-        """
-        Run one task from start to completion.
+        # Initialize tool registry
+        self.tool_registry = ToolRegistry()
+        self._register_default_tools()
 
-        If task_id provided, run that specific task.
-        Otherwise, pick next runnable task.
-        """
-        if task_id:
-            task = self.task_repo.get(task_id)
-            if not task:
-                print(f"Task {task_id} not found")
-                return None
-        else:
-            task = self._pick_next_task()
-            if not task:
-                print("No runnable tasks")
-                return None
-
-        return self._execute_task(task)
-
-    def _pick_next_task(self) -> Optional[Task]:
-        """Pick the next pending task by ID order."""
-        for task in self.task_repo.list_all():
-            if task.status == TaskStatus.PENDING:
-                return task
-        return None
-
-    def _execute_task(self, task: Task) -> Task:
-        """Execute a single task step by step."""
-        task.update_status(TaskStatus.RUNNING)
-        self.task_repo.update(task)
-
-        try:
-            self._run_task_loop(task)
-        except Exception as e:
-            task.add_step("error", error=str(e))
-            task.update_status(TaskStatus.ERROR)
-            self.task_repo.update(task)
-            print(f"Task {task.id} failed: {e}")
-
-        return task
-
-    def _run_task_loop(self, task: Task, max_steps: int = 10):
-        """Run task through decision and execution loop."""
-        step_count = 0
-
-        while step_count < max_steps and task.status == TaskStatus.RUNNING:
-            step_count += 1
-
-            context = self._build_context(task)
-            decision = self.model_router.generate(
-                prompt=f"Task goal: {task.goal}\nCurrent step: {step_count}",
-                context=context
-            )
-
-            task.add_step("decision", result=decision)
-            self.task_repo.update(task)
-
-            if self._is_complete(decision):
-                task.update_status(TaskStatus.DONE)
-                self.task_repo.update(task)
-                print(f"Task {task.id} completed")
-                break
-
-            action_result = self._execute_action(decision, task)
-            if action_result.get("error"):
-                raise Exception(action_result["error"])
-
-            task.add_step("action", result=action_result.get("output", ""))
-            self.task_repo.update(task)
-
-        if task.status == TaskStatus.RUNNING:
-            task.update_status(TaskStatus.DONE)
-            self.task_repo.update(task)
-            print(f"Task {task.id} completed (max steps reached)")
-
-    def _build_context(self, task: Task) -> Dict[str, Any]:
-        """Build context for model from task state."""
-        return {
-            "task_id": task.id,
-            "goal": task.goal,
-            "status": task.status.value,
-            "steps": task.steps[-3:],
-            "memory": task.memory
-        }
-
-    def _is_complete(self, decision: str) -> bool:
-        """Check if decision indicates task completion."""
-        complete_markers = ["done", "complete", "finished", "finished", "success"]
-        return any(
-            marker.lower() in decision.lower()
-            for marker in complete_markers
+        # Initialize supervisor with workers
+        self.supervisor = SupervisorAgent(
+                tool_registry=self.tool_registry,
+                model_router=model_router,
+                task_repo=task_repo,
+                max_workers=max_workers
         )
 
-    def _execute_action(self, decision: str, task: Task) -> Dict[str, Any]:
-        """Parse and execute action from decision."""
-        if "shell:" in decision.lower():
-            cmd = decision.split("shell:", 1)[1].strip()
-            exit_code, stdout, stderr = self.executor.execute_shell(cmd)
+    def _register_default_tools(self):
+        """Register default tools."""
+        self.tool_registry.register(ShellTool())
+        self.tool_registry.register(FileReadTool())
+        self.tool_registry.register(FileWriteTool())
+        self.tool_registry.register(ListDirTool())
 
-            if stderr:
-                return {"error": stderr, "output": stdout}
-            return {"output": stdout}
+    def run_single_task(self, task_id: Optional[int] = None) -> Optional[Task]:
+        """Run one task using multi-agent system."""
+        if task_id:
+                task = self.task_repo.get(task_id)
+                if not task:
+                        print(f"Task {task_id} not found")
+                        return None
+        else:
+                task = self._pick_next_task()
+                if not task:
+                        print("No runnable tasks")
+                        return None
 
-        return {"output": "No action executed"}
+        return self._execute_task_with_supervisor(task)
+
+    def run_all_pending(self) -> dict:
+        """Run all pending tasks through multi-agent system."""
+        results = self.supervisor.run_all_pending()
+        print(f"\nResults: {results['completed']} completed, {results['failed']} failed, {results['queued']} queued")
+        return results
+
+    def _pick_next_task(self) -> Optional[Task]:
+        """Pick next pending task by ID order."""
+        for task in self.task_repo.list_all():
+                if task.status == TaskStatus.PENDING:
+                        return task
+        return None
+
+    def _execute_task_with_supervisor(self, task: Task) -> Task:
+        """Execute task using supervisor agent."""
+        try:
+                result = self.supervisor.execute(task)
+
+                if result.get("success", False):
+                        task.update_status(TaskStatus.DONE)
+                        print(f"Task {task.id} completed")
+                else:
+                        task.update_status(TaskStatus.ERROR)
+                        error_msg = result.get("error", "Unknown error")
+                        print(f"Task {task.id} failed: {error_msg}")
+
+                self.task_repo.update(task)
+                return task
+
+        except Exception as e:
+                task.add_step("error", error=str(e))
+                task.update_status(TaskStatus.ERROR)
+                self.task_repo.update(task)
+                print(f"Task {task.id} failed: {e}")
+                return task
 
     def pause_task(self, task_id: int) -> bool:
-        """Pause a running task."""
-        task = self.task_repo.get(task_id)
-        if task and task.status == TaskStatus.RUNNING:
-            task.update_status(TaskStatus.PAUSED)
-            self.task_repo.update(task)
-            print(f"Task {task_id} paused")
-            return True
-        print(f"Cannot pause task {task_id}")
+        """Pause a running task (not supported in multi-agent mode)."""
+        print("Pause not supported in multi-agent autonomous mode")
         return False
 
     def resume_task(self, task_id: int) -> Optional[Task]:
-        """Resume a paused task."""
-        task = self.task_repo.get(task_id)
-        if not task:
-            print(f"Task {task_id} not found")
-            return None
+        """Resume a paused task (not supported in multi-agent mode)."""
+        print("Resume not supported in multi-agent autonomous mode")
+        return None
 
-        if task.status != TaskStatus.PAUSED:
-            print(f"Task {task_id} is not paused")
-            return None
-
-        return self._execute_task(task)
+    def get_worker_status(self) -> list[dict]:
+        """Get status of all worker agents."""
+        return self.supervisor.get_worker_status()

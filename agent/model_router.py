@@ -1,6 +1,6 @@
 """Model provider router for selecting and using providers."""
 import os
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Iterator
 from .models import ModelProvider
 from .providers.dummy import DummyProvider
 from .providers.openai_provider import OpenAIProvider
@@ -44,10 +44,26 @@ class ModelRouter:
         provider = self.get_provider(provider_name)
         return provider.generate(prompt, context)
 
+    def generate_stream(
+        self,
+        prompt: str,
+        context: Dict[str, Any] = {},
+        provider_name: Optional[str] = None
+    ) -> Iterator[str]:
+        """Generate streaming response if supported, else fallback."""
+        provider = self.get_provider(provider_name)
+
+        if provider.supports_streaming:
+                return provider.generate_stream(prompt, context)
+
+        # Fallback: yield full response as single chunk
+        response = provider.generate(prompt, context)
+        yield response
+
     def list_providers(self) -> list[str]:
         """List all registered provider names."""
         return list(self._providers.keys())
 
     def get_default_provider(self) -> Optional[str]:
-        """Get the name of the default provider."""
+        """Get name of default provider."""
         return self._default_provider
