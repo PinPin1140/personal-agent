@@ -61,31 +61,6 @@ def main():
     auth_rotate_parser = auth_subparsers.add_parser("rotate", help="Rotate to next available account")
     auth_rotate_parser.add_argument("provider", help="Provider name")
 
-    auth_add_account_parser = auth_subparsers.add_parser("add-account", help="Add account for provider")
-    auth_add_account_parser.add_argument("provider", help="Provider name")
-    auth_add_account_parser.add_argument("account-id", help="Account identifier")
-    auth_add_account_parser.add_argument("--priority", type=int, default=1, help="Account priority (higher first)")
-
-    auth_list_parser = auth_subparsers.add_parser("list", help="List all accounts")
-
-    # Plugin commands
-    plugin_parser = subparsers.add_parser("plugin", help="Plugin management")
-    plugin_subparsers = plugin_parser.add_subparsers(dest="plugin_command")
-
-    plugin_install_parser = plugin_subparsers.add_parser("install", help="Install plugin from path or URL")
-    plugin_install_parser.add_argument("path", help="Path or URL to plugin")
-
-    plugin_list_parser = plugin_subparsers.add_parser("list", help="List all plugins")
-
-    plugin_remove_parser = plugin_subparsers.add_parser("remove", help="Remove installed plugin")
-    plugin_remove_parser.add_argument("name", help="Plugin name")
-
-    plugin_enable_parser = plugin_subparsers.add_parser("enable", help="Enable a plugin")
-    plugin_enable_parser.add_argument("name", help="Plugin name")
-
-    plugin_disable_parser = plugin_subparsers.add_parser("disable", help="Disable a plugin")
-    plugin_disable_parser.add_argument("name", help="Plugin name")
-
     # Plugin commands
     plugin_parser = subparsers.add_parser("plugin", help="Plugin management")
     plugin_subparsers = plugin_parser.add_subparsers(dest="plugin_command")

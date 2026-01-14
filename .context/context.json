@@ -1,0 +1,18 @@
+{
+  "project": {
+    "id": "project_1768433262",
+    "name": "Build a sample Python application",
+    "created_at": "2026-01-15T06:27:42.441608",
+    "last_updated": "2026-01-15T06:27:42.441649"
+  },
+  "current_task": null,
+  "policy": {
+    "read_before_write": true,
+    "unrestricted": true,
+    "trusted_workspace": false
+  },
+  "meta": {
+    "journal_max": 200,
+    "compact_after": 50
+  }
+}
